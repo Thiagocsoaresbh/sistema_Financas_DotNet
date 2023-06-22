@@ -1,0 +1,73 @@
+@model TransacaoModel
+@{
+    ViewData["Title"] = "Registro de Transação Financeira";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<form asp-controller="Transacao" asp-action="Cadastro" method="post">
+    <div class="container">
+        <div class="mb-3">
+            <label class="form-label">Data Transação</label>
+            <input type="hidden" class="form-control" id="Id" asp-for="Id" />
+            <input type="date" class="form-control" id="Data" asp-for="Data"/>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Valor</label>
+            <input type="text" class="form-control" id="Valor" asp-for="Valor" step="0.01" />
+        </div>
+        <div class="mb-3">
+        <label class="form-label">Plano de Conta</label>
+        @Html.DropDownListFor(m => m.PlanoContaId, Model.PlanoContas, new { @class="form-select", @onchange="MostrarEsconderCampoMetodoPagamento(this.options[this.selectedIndex].value)"} )
+        </div>
+        <div class="mb-3" id="bloco-pagamento">
+        <label class="form-label">Método de Pagamento</label>
+        @Html.DropDownListFor(m => m.MetodoPagamentoId, Model.MetodosPagamento, new { @class="form-select" })        
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Histórico</label>
+            <input type="text" class="form-control" id="Historico" asp-for="Historico" />
+        </div>
+        <div>
+            <a role="button" href="/Transacao/Index" type="button" class="btn btn-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Enviar</button>
+        </div>
+    </div>
+</form>
+
+<script>
+    function MostrarEsconderCampoMetodoPagamento(id) {
+        var origem = window.origin;
+        var url = `${origem}/PlanoConta/ObtemTipoPlanoConta/${id}`;
+        const xhr = new XMLHttpRequest();
+        const componenteMetodoPagamento = document.getElementById('bloco-pagamento')
+        xhr.open("GET", url, true);
+        xhr.onload = (e) => {
+            if(xhr.readyState === 4) {
+                if(xhr.status === 200) {
+                    if(xhr.responseText === 'D'){ // verifica se é despesa
+                        componenteMetodoPagamento.classList.remove('d-none');
+                    }else { 
+                        componenteMetodoPagamento.classList.add('d-none');
+                    }
+                } else {
+                    componenteMetodoPagamento.classList.add('d-none');
+                }
+            }
+        }
+        xhr.onerror = (e) => {
+            alert(`Erro: ${xhr.statusText}`)
+        };
+        xhr.send(null)
+    }  
+
+    function VerificaId () {
+        var id = document.getElementById('Id').value;
+
+        if(id) {
+            MostrarEsconderCampoMetodoPagamento(id);
+        } 
+    }
+
+    VerificaId();
+</script>
